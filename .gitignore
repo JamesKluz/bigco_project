@@ -1,0 +1,5 @@
+*.dSYM
+.DS_STORE
+__pycache__
+build-release/
+__pycache__/
