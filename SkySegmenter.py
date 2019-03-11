@@ -8,8 +8,6 @@ import utilities
 
 class SkySegmenter:
   def __init__(self):
-    """ 
-    """
     # Image / Frame variables:
     self.image = None
     self.output_file = None
@@ -45,15 +43,23 @@ class SkySegmenter:
 
   def load_image(self, image_file):
     """ 
+      Loads image at path image_file as a numpy array
+      @ image_file: path to image file to produce mask for
     """
     self.image = cv2.imread(image_file) 
     self.image = imutils.resize(self.image, width=self.width)
     self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
 
   def load_video(self, video_file, output_file):
+    """ 
+      Loads pointer to video at path video_file.
+      We require an output path for videos
+      @ image_file: path to video file to produce mask for
+    """
     # initialize the video capture pointer
     self.video_capture = cv2.VideoCapture(video_file)
     self.output_file = output_file
+    # Get frame count in video
     try:
       cpfc =  cv2.cv.CV_CAP_PROP_FRAME_COUNT if imutils.is_cv2() \
         else cv2.CAP_PROP_FRAME_COUNT
@@ -63,7 +69,24 @@ class SkySegmenter:
       print("Could not gte frame count for {}".format(video_file))
     print("Writing to {}".format(self.output_file))
 
+  def ready_for_video(self):
+    if self.video_capture is None:
+      print("Video capture pointer not initialized")
+      return False
+    if self.cnn_model is None:
+      print("CNN model not loaded")
+      return False
+    return True
+
   def generate_masked_video(self):
+    """ 
+      Creates masked video for loaded video file and 
+      saves it to self.output_file
+    """
+    # Checks for needed state:
+    if not self.ready_for_video():
+      return
+    # If b4_and_after flag set we call the appropriate methods
     if self.b4_and_after:
       self.generate_masked_video_b4_and_after()
       return
@@ -105,11 +128,21 @@ class SkySegmenter:
         if key == ord("q"):
           break
 
+    # Release the pointers
     self.writer.release()
     self.video_capture.release()
+    self.writer = None 
+    self.video_capture = None
 
   def generate_masked_video_b4_and_after(self):
+    """ 
+      Creates masked video for loaded video file and 
+      saves it to self.output_file
+      This method additionally displays the original video
+      along side the masked one.
+    """
     # loop over frames
+    # a buffer of pixels to seperate the two videos in the output
     border = 25
     while True:
       # read the next frame from the file
@@ -119,6 +152,7 @@ class SkySegmenter:
         break
 
       self.image = imutils.resize(frame, width=self.width)
+      # We double the image height plus a buffer to output both vids
       output = np.zeros((2*self.image.shape[0] + border, 
                          self.image.shape[1], 3), dtype='uint8')
       output[:, :, :] = np.array([240, 240, 240])
@@ -156,11 +190,28 @@ class SkySegmenter:
 
     self.writer.release()
     self.video_capture.release()
+    self.writer = None 
+    self.video_capture = None
 
   def load_cnn(self, cnn_path):
     self.cnn_model = cv2.dnn.readNet(cnn_path)
 
+  def ready_for_image(self):
+    if self.image is None:
+      print("No image loaded")
+      return False
+    if self.cnn_model is None:
+      print("CNN model not loaded")
+      return False
+    return True
+
   def get_sky_mask(self):
+    """ 
+      Runs the needed methods in order to generate the 
+      full `sky/not-sky` mask
+    """
+    if not self.ready_for_image():
+      return
     self.get_color_image_mask()
     self.get_color_assertion_mask()
     self.find_connected_components()
@@ -173,6 +224,10 @@ class SkySegmenter:
     
 
   def run_foward_pass(self, image):
+    """ 
+      Runs ENet on the image which returns per-pixel predictions
+      for CityScape classes
+    """
     blob = cv2.dnn.blobFromImage(image, self.norm_coeffcient, 
                                  self.cnn_input_dims, 0, swapRB=True, 
                                  crop=False)
@@ -185,6 +240,10 @@ class SkySegmenter:
     return mask
 
   def get_grey_mask(self):
+    """ 
+      Creates a 3 channel greyscale image and optionally
+      sharpens it.
+    """
     three_chan_grey = np.array(self.image)
     three_chan_grey[:, :, 0] = self.grey_image
     three_chan_grey[:, :, 1] = self.grey_image
@@ -204,6 +263,10 @@ class SkySegmenter:
     self.color_image_mask = self.run_foward_pass(self.image)
 
   def find_connected_components(self):
+    """ 
+      Identifies connected components and keeps those that
+      intersect ENet predictions
+    """
     if self.use_connected_components:
       blurred = cv2.medianBlur(self.grey_image ,5)
       _, binary_low = cv2.threshold(blurred, self.binary_lower_bound, 255, 

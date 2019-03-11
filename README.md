@@ -12,14 +12,13 @@
 ## Requirements:
 - python 2
 - numpy
-- scikit-lear
+- scikit-learn
 - opencv
 - scipy
 - imutils
 
 ### To Do:
-- requirements
-- more comments
+- Implement non-CNN classifiers
 
 ### Ideas:
 - Feature points for locking mask to scene between CNN returns

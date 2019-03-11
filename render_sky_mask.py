@@ -1,3 +1,10 @@
+'''
+Authoer: James Kluz
+Driver for SkySegmenter.
+Generates images and videos with sky region
+overlayed with a blue mask.
+'''
+
 import argparse
 import cv2
 import numpy as np
