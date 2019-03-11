@@ -5,3 +5,5 @@ build-release/
 __pycache__/
 masked_videos/
 cityscape_videos/
+SkySegmenter.pyc
+utilities.pyc
