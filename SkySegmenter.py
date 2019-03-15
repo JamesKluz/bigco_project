@@ -21,6 +21,7 @@ class SkySegmenter:
     self.binary_lower_bound = 120
     self.binary_low_blue_bound = 160
     self.color_image_mask = None
+    self.color_image_only = None
     self.grey_mask = None
     self.connected_components = None
     self.remaining_components = None
@@ -29,6 +30,7 @@ class SkySegmenter:
     self.use_connected_components = True
     self.apply_sharpening = True
     self.use_greyscale = True
+    self.vertical_flip = False
     # use_color_assertions has no effect currenty
     self.use_color_assertions = True
     self.normalize_grey = True
@@ -39,6 +41,9 @@ class SkySegmenter:
     self.fps = 30
     self.display_video = True
     self.b4_and_after = False
+    self.four_way = False
+    self.roll = 0
+    self.portrait = False
 
 
   def load_image(self, image_file):
@@ -78,6 +83,74 @@ class SkySegmenter:
       return False
     return True
 
+  # def generate_masked_video(self):
+  #   """ 
+  #     Creates masked video for loaded video file and 
+  #     saves it to self.output_file
+  #   """
+  #   # Checks for needed state:
+  #   if not self.ready_for_video():
+  #     return
+  #   # If b4_and_after flag or four_way flag set we 
+  #   # call the appropriate methods
+  #   if self.four_way:
+  #     self.generate_masked_video_4_way()
+  #     return
+  #   if self.b4_and_after:
+  #     if self.portrait:
+  #       self.generate_masked_video_b4_and_after_portrait()
+  #     else:
+  #       self.generate_masked_video_b4_and_after_horizontal()
+  #     return
+  #   # loop over frames
+  #   while True:
+  #     # read the next frame from the file
+  #     (success, frame) = self.video_capture.read()
+  #     # if we didn't succeed we hit the end of the feed
+  #     if not success:
+  #       break
+
+  #     if self.vertical_flip:
+  #       frame = np.flip(frame, axis=0)
+  #       frame = np.flip(frame, axis=1)
+
+  #     self.image = imutils.resize(frame, width=self.width)
+  #     self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
+  #     start_time = time.time()
+  #     self.get_sky_mask()
+  #     self.image[self.final_mask] = np.array([255, 0, 0])
+  #     end_time = time.time()
+  #     # check if the video writer is None
+  #     if self.writer is None:
+  #       # initialize our video writer
+  #       vw_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+  #       self.writer = cv2.VideoWriter(self.output_file, vw_fourcc, self.fps,
+  #                                    (self.image.shape[1], self.image.shape[0]), 
+  #                                     True)
+  #       # Display processing time
+  #       if self.frame_count > 0:
+  #         elapsed_time = (end_time - start_time)
+  #         print("Per-frame time: {:.4f} seconds".format(elapsed_time))
+  #         print("Estimated total time: {:.4f}".format(
+  #               elapsed_time * self.frame_count))
+
+  #     # write the output frame to disk
+  #     self.writer.write(self.image)
+
+  #     # Display video
+  #     if self.display_video:
+  #       cv2.imshow("Frame", self.image)
+  #       key = cv2.waitKey(1) & 0xFF
+  #       # If `q` key pressed, break.
+  #       if key == ord("q"):
+  #         break
+
+  #   # Release the pointers
+  #   self.writer.release()
+  #   self.video_capture.release()
+  #   self.writer = None 
+  #   self.video_capture = None
+
   def generate_masked_video(self):
     """ 
       Creates masked video for loaded video file and 
@@ -86,27 +159,55 @@ class SkySegmenter:
     # Checks for needed state:
     if not self.ready_for_video():
       return
-    # If b4_and_after flag set we call the appropriate methods
+    # If b4_and_after flag or four_way flag set we 
+    # call the appropriate methods
+    if self.four_way:
+      self.generate_masked_video_4_way()
+      return
     if self.b4_and_after:
-      self.generate_masked_video_b4_and_after()
+      if self.portrait:
+        self.generate_masked_video_b4_and_after_portrait()
+      else:
+        self.generate_masked_video_b4_and_after_horizontal()
       return
     # loop over frames
+    tr_image = cv2.imread('background_images/aliens_6.jpg')
+    tr_image = cv2.resize(tr_image,(935, 525))
+    half_frame_count = 2.0 * float(self.frame_count) / (5.0)
+    counter = 0
+    # fade = 0.0
+    # image = True
+    fade = 1.0
+    image = False
     while True:
       # read the next frame from the file
       (success, frame) = self.video_capture.read()
       # if we didn't succeed we hit the end of the feed
       if not success:
         break
+
+      if self.vertical_flip:
+        frame = np.flip(frame, axis=0)
+        frame = np.flip(frame, axis=1)
+      if counter > half_frame_count:
+        image = False
+        counter = 0
+      counter += 1
       self.image = imutils.resize(frame, width=self.width)
       self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
       start_time = time.time()
-      self.get_sky_mask()
-      self.image[self.final_mask] = np.array([255, 0, 0])
+      if not image:
+        self.get_sky_mask()
+        fade += 0.023
+        if fade < 1.0:
+          self.image[self.final_mask] = fade * tr_image[self.final_mask] + (1.0 - fade) * self.image[self.final_mask]
+        else:
+          self.image[self.final_mask] = tr_image[self.final_mask]
       end_time = time.time()
       # check if the video writer is None
       if self.writer is None:
         # initialize our video writer
-        vw_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        vw_fourcc = cv2.VideoWriter_fourcc(*"MP4V")
         self.writer = cv2.VideoWriter(self.output_file, vw_fourcc, self.fps,
                                      (self.image.shape[1], self.image.shape[0]), 
                                       True)
@@ -134,7 +235,7 @@ class SkySegmenter:
     self.writer = None 
     self.video_capture = None
 
-  def generate_masked_video_b4_and_after(self):
+  def generate_masked_video_b4_and_after_horizontal(self):
     """ 
       Creates masked video for loaded video file and 
       saves it to self.output_file
@@ -151,6 +252,10 @@ class SkySegmenter:
       if not success:
         break
 
+      if self.vertical_flip:
+        frame = np.flip(frame, axis=0)
+        frame = np.flip(frame, axis=1)
+
       self.image = imutils.resize(frame, width=self.width)
       # We double the image height plus a buffer to output both vids
       output = np.zeros((2*self.image.shape[0] + border, 
@@ -162,6 +267,226 @@ class SkySegmenter:
       self.get_sky_mask()
       self.image[self.final_mask] = np.array([255, 0, 0])
       output[:self.image.shape[0], :, :] = self.image[:, :, :]
+      end_time = time.time()
+      # check if the video writer is None
+      if self.writer is None:
+        # initialize our video writer
+        vw_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        # we double the height and add a little 
+        self.writer = cv2.VideoWriter(self.output_file, vw_fourcc, self.fps,
+                                     (output.shape[1], output.shape[0]), True)
+        # Display processing time
+        if self.frame_count > 0:
+          elapsed_time = (end_time - start_time)
+          print("Per-frame time: {:.4f} seconds".format(elapsed_time))
+          print("Estimated total time: {:.4f}".format(
+                elapsed_time * self.frame_count))
+
+      # write the output frame to disk
+      self.writer.write(output)
+
+      # Display video
+      if self.display_video:
+        cv2.imshow("Frame", output)
+        key = cv2.waitKey(1) & 0xFF
+        # If `q` key pressed, break.
+        if key == ord("q"):
+          break
+
+    self.writer.release()
+    self.video_capture.release()
+    self.writer = None 
+    self.video_capture = None
+
+  def generate_masked_video_4_way(self):
+    """ 
+      Creates masked video for loaded video file and 
+      saves it to self.output_file
+      This method additionally displays the original video
+      along side the masked one.
+    """
+    # loop over frames
+    # a buffer of pixels to seperate the two videos in the output
+    border = 25
+    while True:
+      # read the next frame from the file
+      (success, frame) = self.video_capture.read()
+      # if we didn't succeed we hit the end of the feed
+      if not success:
+        break
+
+      if self.vertical_flip:
+        frame = np.flip(frame, axis=0)
+        frame = np.flip(frame, axis=1)
+
+      self.image = imutils.resize(frame, width=self.width)
+      # We double the image height plus a buffer to output both vids
+      output = np.zeros((2*self.image.shape[0] + border, 
+                         2*self.image.shape[1] + border, 3), dtype='uint8')
+      output[:, :, :] = np.array([0, 0, 0])
+      output[:self.image.shape[0], :self.image.shape[1], :] = self.image[:, :, :]
+      #output[self.image.shape[0] + border :, :self.image.shape[1], :] = self.image[:, :, :]
+      #output[:self.image.shape[0], self.image.shape[1] + border :, :] = self.image[:, :, :]
+      #output[self.image.shape[0] + border :, self.image.shape[1] + border :, :] = self.image[:, :, :]
+      self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
+      start_time = time.time()
+      self.get_sky_mask()
+      color_only = np.array(self.image)
+      color_and_grey = np.array(self.image)
+      self.image[self.final_mask] = np.array([255, 0, 0])
+      color_only[self.color_image_only] = np.array([255, 0, 0])
+      color_and_grey[self.color_image_mask] = np.array([255, 0, 0])
+
+      output[self.image.shape[0] + border :, :self.image.shape[1], :] = color_only
+      output[:self.image.shape[0], self.image.shape[1] + border :, :] = color_and_grey
+      output[self.image.shape[0] + border :, self.image.shape[1] + border :, :] = self.image[:, :, :]
+      end_time = time.time()
+      # check if the video writer is None
+      if self.writer is None:
+        # initialize our video writer
+        # vw_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        vw_fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+        # we double the height and add a little 
+        self.writer = cv2.VideoWriter(self.output_file, vw_fourcc, self.fps,
+                                     (output.shape[1], output.shape[0]), True)
+        # Display processing time
+        if self.frame_count > 0:
+          elapsed_time = (end_time - start_time)
+          print("Per-frame time: {:.4f} seconds".format(elapsed_time))
+          print("Estimated total time: {:.4f}".format(
+                elapsed_time * self.frame_count))
+
+      # write the output frame to disk
+      self.writer.write(output)
+
+      # Display video
+      if self.display_video:
+        cv2.imshow("Frame", output)
+        key = cv2.waitKey(1) & 0xFF
+        # If `q` key pressed, break.
+        if key == ord("q"):
+          break
+
+    self.writer.release()
+    self.video_capture.release()
+    self.writer = None 
+    self.video_capture = None
+
+  # def generate_masked_video_4_way(self):
+  #   """ 
+  #     Creates masked video for loaded video file and 
+  #     saves it to self.output_file
+  #     This method additionally displays the original video
+  #     along side the masked one.
+  #   """
+  #   # loop over frames
+  #   # a buffer of pixels to seperate the two videos in the output
+  #   border = 25
+
+  #   tr_image = cv2.imread('background_images/storm_1.jpeg')
+  #   tr_image = cv2.resize(tr_image,(935, 525))
+
+  #   br_image = cv2.imread('background_images/night.jpg')
+  #   br_image = cv2.resize(br_image,(935, 525))
+
+  #   while True:
+  #     # read the next frame from the file
+  #     (success, frame) = self.video_capture.read()
+  #     # if we didn't succeed we hit the end of the feed
+  #     if not success:
+  #       break
+
+  #     if self.vertical_flip:
+  #       frame = np.flip(frame, axis=0)
+  #       frame = np.flip(frame, axis=1)
+
+  #     self.image = imutils.resize(frame, width=self.width)
+  #     top_right = np.array(self.image)
+  #     bottom_right = np.array(self.image)
+  #     # We double the image height plus a buffer to output both vids
+  #     output = np.zeros((2*self.image.shape[0] + border, 
+  #                        2*self.image.shape[1] + border, 3), dtype='uint8')
+  #     output[:, :, :] = np.array([0, 0, 0])
+  #     output[:self.image.shape[0], :self.image.shape[1], :] = self.image[:, :, :]
+  #     #output[self.image.shape[0] + border :, :self.image.shape[1], :] = self.image[:, :, :]
+  #     # output[:self.image.shape[0], self.image.shape[1] + border :, :] = self.image[:, :, :]
+  #     #output[self.image.shape[0] + border :, self.image.shape[1] + border :, :] = self.image[:, :, :]
+  #     self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
+  #     start_time = time.time()
+  #     self.get_sky_mask()
+  #     self.image[self.final_mask] = np.array([255, 0, 0])
+  #     top_right[self.final_mask] = tr_image[self.final_mask]
+  #     bottom_right[self.final_mask] = br_image[self.final_mask]
+  #     output[self.image.shape[0] + border :, :self.image.shape[1], :] = self.image[:, :, :]
+  #     #top right
+  #     output[:self.image.shape[0], self.image.shape[1] + border :, :] = top_right
+  #     output[self.image.shape[0] + border :, self.image.shape[1] + border :, :] = bottom_right
+  #     end_time = time.time()
+  #     # check if the video writer is None
+  #     if self.writer is None:
+  #       # initialize our video writer
+  #       # vw_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+  #       vw_fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+  #       # we double the height and add a little 
+  #       self.writer = cv2.VideoWriter(self.output_file, vw_fourcc, self.fps,
+  #                                    (output.shape[1], output.shape[0]), True)
+  #       # Display processing time
+  #       if self.frame_count > 0:
+  #         elapsed_time = (end_time - start_time)
+  #         print("Per-frame time: {:.4f} seconds".format(elapsed_time))
+  #         print("Estimated total time: {:.4f}".format(
+  #               elapsed_time * self.frame_count))
+
+  #     # write the output frame to disk
+  #     self.writer.write(output)
+
+  #     # Display video
+  #     if self.display_video:
+  #       cv2.imshow("Frame", output)
+  #       key = cv2.waitKey(1) & 0xFF
+  #       # If `q` key pressed, break.
+  #       if key == ord("q"):
+  #         break
+
+  #   self.writer.release()
+  #   self.video_capture.release()
+  #   self.writer = None 
+  #   self.video_capture = None
+
+  def generate_masked_video_b4_and_after_portrait(self):
+    """ 
+      Creates masked video for loaded video file and 
+      saves it to self.output_file
+      This method additionally displays the original video
+      along side the masked one.
+    """
+    # loop over frames
+    # a buffer of pixels to seperate the two videos in the output
+    border = 25
+    while True:
+      # read the next frame from the file
+      (success, frame) = self.video_capture.read()
+      # if we didn't succeed we hit the end of the feed
+      if not success:
+        break
+
+      if self.vertical_flip:
+        frame = np.flip(frame, axis=0)
+        frame = np.flip(frame, axis=1)
+      if self.roll > 0:
+        frame = np.rot90(frame, k=self.roll)
+
+      self.image = imutils.resize(frame, width=self.width)
+      # We double the image height plus a buffer to output both vids
+      output = np.zeros((self.image.shape[0], 
+                         2*self.image.shape[1] + border, 3), dtype='uint8')
+      output[:, :, :] = np.array([240, 240, 240])
+      output[:, self.image.shape[1] + border :, :] = self.image[:, :, :]
+      self.grey_image = cv2.cvtColor(self.image ,cv2.COLOR_BGR2GRAY)
+      start_time = time.time()
+      self.get_sky_mask()
+      self.image[self.final_mask] = np.array([255, 0, 0])
+      output[:, :self.image.shape[1], :] = self.image[:, :, :]
       end_time = time.time()
       # check if the video writer is None
       if self.writer is None:
@@ -261,6 +586,7 @@ class SkySegmenter:
 
   def get_color_image_mask(self):
     self.color_image_mask = self.run_foward_pass(self.image)
+    self.color_image_only = self.color_image_mask
 
   def find_connected_components(self):
     """ 
@@ -311,6 +637,8 @@ class SkySegmenter:
 
   def get_final_mask(self):
     intersection = np.array(self.connected_components)
+    # Border cheat
+    # self.color_image_mask[:20, :] = True
     intersection[np.logical_not(self.color_image_mask)] = 0
     remaining_labels = np.unique(intersection)
     self.remaining_components = np.logical_and(np.isin(self.connected_components, 

@@ -26,14 +26,24 @@ def set_model_parameters(model):
     model.use_color_assertions = True
   if args.binary_thresh:
     model.binary_lower_bound = args.binary_thresh
+  if args.binary_blue_thresh:
+    model.binary_low_blue_bound = args.binary_blue_thresh
   if args.no_normalize:
     model.normalize_grey = False
   if args.no_use_cc:
     model.use_connected_components = False
   if args.no_use_grey:
     model.use_greyscale = False
+  if args.four_way:
+    model.four_way = True
   if args.b4_and_after:
     model.b4_and_after = True
+  if args.vertical_flip:
+    model.vertical_flip = True
+  if args.roll is not None:
+    model.roll = args.roll
+  if args.portrait:
+    model.portrait = True
 
 def main():
   ss = SkySegmenter()
@@ -67,6 +77,8 @@ def parse_args():
   parser.add_argument("--image_width", type=int, help="image out width")
   parser.add_argument("--binary_thresh", type=int, 
                       help="lower bound for connected components")
+  parser.add_argument("--binary_blue_thresh", type=int, 
+                      help="lower bound for connected components")
   parser.add_argument("--sharpening_sigma", type=float, 
                       help="sigma for greyscale sharpening")
   parser.add_argument("--no_sharpen", help="don't sharpen greyscale image", 
@@ -81,6 +93,12 @@ def parse_args():
                       action="store_true")
   parser.add_argument("--b4_and_after", help="render before and after videos", 
                       action="store_true")
+  parser.add_argument("--four_way", help="render before and 3 after videos", 
+                      action="store_true")
+  parser.add_argument("--vertical_flip", help="fix upside down video", 
+                      action="store_true")
+  parser.add_argument("--roll", type=int, help="fix rolled video number times to roll")
+  parser.add_argument("--portrait", help="portrait video", action="store_true")
   args = parser.parse_args()
   return args
 
