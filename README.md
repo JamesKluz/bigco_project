@@ -10,7 +10,7 @@
 - This project is part of a larger effort to design an augmeneted reality application for AccuWeather as part of the BigCo curriculum at Cornell Tech.  
 
 ## Requirements:
-- python 2
+- python 2 (SkySegmenterLight runs in both python 2/3)
 - numpy
 - scikit-learn
 - opencv
@@ -47,17 +47,16 @@
 ## Execution SkySegmenterLight:
 ### Segment Images:
 - Run the following:
-`python render_sky_mask.py <path to image> --output <optional path to image output> --no_normalize`
+`python SkySegmenterlight.py <path to image> --output <optional path to image output>`
 
 #### Where:
 * `<path to image>` is the path to the image to apply the mask
 * `--output <optional path to image output>` optional path to write masked image
-* `--no_normalize` optional but currently reccomended. More testing and hyper-parameter tuning is needed. 
 
 ### Segment Video:
-`python render_sky_mask.py <path to video input> --output <path to video output> --video --no_normalize`
+- Run the following:
+`python SkySegmenterlight.py <path to video> --output <optional path to video output>`
 
 #### Where:
-* `<path to video input>` is the path to the video to apply the mask
-* `<path to video output>` path to write masked video output. Should be .avi extension
-* `--no_normalize` optional but currently reccomended. More testing and hyper-parameter tuning is needed. 
+* `<path to video>` is the path to the video to apply the mask
+* `--output <optional path to video output>` optional path to write masked video
