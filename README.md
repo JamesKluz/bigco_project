@@ -5,7 +5,7 @@
 ### Description:
 - Sky Segmenter is an algorithm that takes as input images or videos of outdoor scenes and returns a per-pixel binary mask representing `sky/not-sky`. The algorithm utilizes the ENET network developed by Adam Paszke et al, as well as various clustering, connected components and color-based classification approaches. The algorithm was trained and tuned utilizing the CityScapes dataset developed by Marius Cordts et al.
 
-- Sky Segmenter currently runs at about 3 FPS on a CPU. Since we hope for this model to run on a cell phone in tandem with additional 3D processing we need something with much less computational complexity. Do to the large amount of parameters in even the smallest of deep learning models capable of per-pixel segmentation we are currently working on a probability based approach using GMMs to create our sky segmentation masks which we are calling SkySegmenterLight. Instructions for using this model are at the bottom of this README.
+- Sky Segmenter currently runs at about 3 FPS on a CPU. Since we hope for this model to run on a cell phone in tandem with additional 3D processing we need something with much less computational complexity. Do to the large amount of parameters in even the smallest of deep learning models capable of per-pixel segmentation we are currently working on a probability based approach using GMMs to create our sky segmentation masks which we are calling SkySegmenterLight. This new model runs at about 50 fps. Instructions for using this model are at the bottom of this README.
 
 - This project is part of a larger effort to design an augmeneted reality application for AccuWeather as part of the BigCo curriculum at Cornell Tech.  
 
