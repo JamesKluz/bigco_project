@@ -9,8 +9,13 @@
 
 - This project is part of a larger effort to design an augmeneted reality application for AccuWeather as part of the BigCo curriculum at Cornell Tech.  
 
-## Requirements:
-- python 2 (SkySegmenterLight runs in both python 2/3)
+## Requirements SkySegmenterLight:
+- python 2 or 3 
+- numpy
+- opencv
+
+## Requirements SkySegmenter:
+- python 2
 - numpy
 - scikit-learn
 - opencv

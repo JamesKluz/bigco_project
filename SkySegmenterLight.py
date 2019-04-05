@@ -210,7 +210,7 @@ class SkySegmeterLight(object):
 def main():
     source = args.input
     ssl = SkySegmeterLight()
-    if source.endswith(('MOV', 'mp4')):
+    if source.endswith(('MOV', 'mp4', 'mov')):
         ssl.videoSrc = source
         ssl.verbose = args.verbose
         if args.output is not None:
