@@ -2,17 +2,24 @@
 
 ## Authors: James Kluz
 
+### Quick Start Guide:
+ - install numpy
+ - install opencv (opencv-python)
+ - Run the following:
+ `python3 demo.py`
+ - feel free to contact me with any questions: jwk259@cornell.edu
+
 ### Description:
 - Sky Segmenter is an algorithm that takes as input images or videos of outdoor scenes and returns a per-pixel binary mask representing `sky/not-sky`. The algorithm utilizes the ENET network developed by Adam Paszke et al, as well as various clustering, connected components and color-based classification approaches. The algorithm was trained and tuned utilizing the CityScapes dataset developed by Marius Cordts et al.
 
-- Sky Segmenter currently runs at about 3 FPS on a CPU. Since we hope for this model to run on a cell phone in tandem with additional 3D processing we need something with much less computational complexity. Do to the large amount of parameters in even the smallest of deep learning models capable of per-pixel segmentation we are currently working on a probability based approach using GMMs to create our sky segmentation masks which we are calling SkySegmenterLight. This new model runs at about 50 fps. Instructions for using this model are at the bottom of this README.
+- The original Sky Segmenter runs at about 3 FPS on a CPU. Since we hope for this model to run on a cell phone in tandem with additional 3D processing we needed something with much less computational complexity. Do to the large amount of parameters in even the smallest of deep learning models capable of per-pixel segmentation we traded in the neural net for a probability distribution based approach which resulted in a different system that we are referring to as SkySegmenterLight. This new model runs at about 50 fps. Instructions for using both models are at the bottom of this README.
 
 - This project is part of a larger effort to design an augmeneted reality application for AccuWeather as part of the BigCo curriculum at Cornell Tech.  
 
 ## Requirements SkySegmenterLight:
 - python 2 or 3 
 - numpy
-- opencv
+- opencv 
 
 ## Requirements SkySegmenter:
 - python 2
@@ -22,12 +29,7 @@
 - scipy
 - imutils
 
-### To Do:
-- Implement GMM for close calls
-- Use edges to identify 'smooth' connected components
-
 ### Ideas:
-- Feature points for locking mask to scene between CNN returns
 - Probability map to carry predictions from one frame to the next
 - Use knowledge of location and current weather conditions to call models fine-tuned for those specific lighting conditions
 
