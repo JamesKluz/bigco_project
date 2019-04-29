@@ -2,12 +2,12 @@
 
 ## Authors: James Kluz
 
-### Quick Start Guide:
- - install numpy
- - install opencv (opencv-python)
- - Run the following:
- `python3 demo.py`
- - feel free to contact me with any questions: jwk259@cornell.edu
+### Demo Quick Start Guide:
+Below are the steps to run the demo. The demo will process the video demo.mp4 in the `files` directory on the fly, periodically replacing the sky with different weather patterns.
+- install numpy
+- install opencv (opencv-python)
+- Run the following: `python3 demo.py`
+- feel free to contact me with any questions: jwk259@cornell.edu
 
 ### Description:
 - Sky Segmenter is an algorithm that takes as input images or videos of outdoor scenes and returns a per-pixel binary mask representing `sky/not-sky`. The algorithm utilizes the ENET network developed by Adam Paszke et al, as well as various clustering, connected components and color-based classification approaches. The algorithm was trained and tuned utilizing the CityScapes dataset developed by Marius Cordts et al.
