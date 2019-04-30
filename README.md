@@ -6,7 +6,8 @@
 Below are the steps to run the demo. The demo will process the video demo.mp4 in the `videos` directory on the fly, periodically replacing the sky with different weather patterns. A before/after window will be displayed with the original video on the top and the processed video on the bottom.
 - install numpy
 - install opencv (opencv-python)
-- Run the following: `python3 demo.py`
+- Run the following: `python3 demo.py --lock_left`
+- The player will appear on the left side of the screen so make sure it's clear. If the above puts the viewer off screen try: `python3 demo.py`
 - To run the demo with your own video run: `python3 demo.py --input <path to video>`
 - feel free to contact me with any questions: jwk259@cornell.edu
 
